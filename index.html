@@ -455,8 +455,8 @@ int main() {
         <!-- FLASHCARDS PAGE -->
         <section id="page-flashcards" class="page">
             <div class="page-header">
-                <h1>🃏 Flashcards</h1>
-                <p class="subtitle">Memorize conceitos chave <span class="xp-hint">+2 XP por card</span></p>
+                <h1>🃏 Flashcards Interativos</h1>
+                <p class="subtitle">Pratique com código, conceitos e desafios <span class="xp-hint">+3 XP por acerto</span></p>
             </div>
             <div class="flashcard-setup">
                 <select id="flash-module">
@@ -471,19 +471,53 @@ int main() {
                 <button id="generate-flashcards" class="btn-primary" disabled>Gerar Flashcards</button>
             </div>
             <div id="flashcard-area" class="flashcard-area hidden">
-                <div class="flashcard-counter"><span id="flash-current">1</span> / <span id="flash-total">10</span></div>
-                <div id="flashcard" class="flashcard" tabindex="0">
-                    <div class="flashcard-inner">
-                        <div class="flashcard-front"><p id="flash-question"></p></div>
-                        <div class="flashcard-back"><p id="flash-answer"></p></div>
-                    </div>
+                <!-- Score bar -->
+                <div class="flash-score-bar">
+                    <span class="flash-score-correct">✓ <span id="flash-correct">0</span></span>
+                    <span class="flash-counter"><span id="flash-current">1</span> / <span id="flash-total">10</span></span>
+                    <span class="flash-score-wrong">✗ <span id="flash-wrong">0</span></span>
                 </div>
-                <p class="flash-hint">Clique no card para virar</p>
+
+                <!-- Card type badge -->
+                <div id="flash-type-badge" class="flash-type-badge">conceito</div>
+
+                <!-- Question card -->
+                <div class="flash-card-question" id="flash-card">
+                    <div id="flash-question" class="flash-q-text"></div>
+
+                    <!-- Answer input (for "complete o código" type) -->
+                    <div id="flash-input-area" class="flash-input-area hidden">
+                        <textarea id="flash-user-answer" placeholder="Digite sua resposta..." rows="2" spellcheck="false"></textarea>
+                        <button id="flash-submit-answer" class="btn-primary" style="width:auto;padding:10px 20px">Verificar</button>
+                    </div>
+
+                    <!-- Multiple choice options -->
+                    <div id="flash-options" class="flash-options hidden"></div>
+
+                    <!-- Feedback -->
+                    <div id="flash-feedback" class="flash-feedback hidden"></div>
+
+                    <!-- Explanation (shown after answer) -->
+                    <div id="flash-explanation" class="flash-explanation hidden"></div>
+                </div>
+
+                <!-- Controls -->
                 <div class="flashcard-controls">
-                    <button id="flash-prev" class="btn-secondary">← Anterior</button>
-                    <button id="flash-knew" class="btn-success">✓ Sabia</button>
-                    <button id="flash-didnt" class="btn-danger">✗ Não sabia</button>
-                    <button id="flash-next" class="btn-secondary">Próximo →</button>
+                    <button id="flash-skip" class="btn-secondary">Pular →</button>
+                    <button id="flash-next" class="btn-primary hidden" style="width:auto;padding:10px 24px">Próximo →</button>
+                </div>
+
+                <!-- End results -->
+                <div id="flash-results" class="flash-results hidden">
+                    <div class="results-card">
+                        <h2>Flashcards Completos!</h2>
+                        <div class="results-score">
+                            <span id="flash-results-pct" style="display:block;font-size:3rem;font-weight:900;color:var(--accent)">0%</span>
+                            <span id="flash-results-detail"></span>
+                        </div>
+                        <div id="flash-results-xp" class="results-xp"></div>
+                        <button id="flash-retry" class="btn-primary" style="width:auto;min-width:180px">Gerar Novos</button>
+                    </div>
                 </div>
             </div>
         </section>

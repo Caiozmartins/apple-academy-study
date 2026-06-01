@@ -663,41 +663,192 @@ async function submitCode() {
     } catch(e) { alert(e.message); } finally { hideLoading(); }
 }
 
-// ===== FLASHCARDS =====
+// ===== FLASHCARDS (interactive — 3 types) =====
 function setupFlashcardsPage() {
     const ms=document.getElementById('flash-module'), btn=document.getElementById('generate-flashcards');
     ms.addEventListener('change',()=>btn.disabled=!ms.value);
     btn.addEventListener('click', generateFlashcards);
-    document.getElementById('flashcard').addEventListener('click',()=>document.getElementById('flashcard').classList.toggle('flipped'));
-    document.getElementById('flash-prev').addEventListener('click',()=>{if(state.currentFlashIndex>0){state.currentFlashIndex--;showFlash();}});
-    document.getElementById('flash-next').addEventListener('click',()=>{if(state.currentFlashcards&&state.currentFlashIndex<state.currentFlashcards.length-1){state.currentFlashIndex++;showFlash();}});
-    document.getElementById('flash-knew').addEventListener('click',()=>advFlash(true));
-    document.getElementById('flash-didnt').addEventListener('click',()=>advFlash(false));
+    document.getElementById('flash-next').addEventListener('click', nextFlash);
+    document.getElementById('flash-skip').addEventListener('click', () => { flashRecord(false); nextFlash(); });
+    document.getElementById('flash-submit-answer').addEventListener('click', submitFlashAnswer);
+    document.getElementById('flash-user-answer').addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitFlashAnswer();} });
+    document.getElementById('flash-retry').addEventListener('click', () => { document.getElementById('flash-results').classList.add('hidden'); generateFlashcards(); });
 }
+
+let flashScore = { correct: 0, wrong: 0 };
+
 async function generateFlashcards() {
     const mod=document.getElementById('flash-module').value; if(!mod) return;
-    showLoading('Gerando flashcards...');
+    showLoading('Gerando flashcards interativos...');
     try {
-        const r=await callGemini(`Gere 12 flashcards sobre "${TOPICS[mod].name}" para a Apple Developer Academy.\nJSON:[{"front":"pergunta curta","back":"resposta concisa"}]\nAPENAS JSON.`,SYSTEM_INSTRUCTION);
-        state.currentFlashcards=JSON.parse(r.replace(/```json?\n?/g,'').replace(/```/g,'').trim());
-        state.currentFlashIndex=0;
+        const prompt = `Gere 10 flashcards interativos sobre "${TOPICS[mod].name}" para a prova da Apple Developer Academy.
+
+MISTURE 3 tipos de card:
+1. "choice" — pergunta com 4 opções (apenas 1 correta). Inclua código C quando relevante.
+2. "complete" — mostre um trecho de código C com uma parte faltando (____) e peça pro aluno completar. A resposta deve ser curta (1 linha).
+3. "concept" — pergunta conceitual direta com 4 opções.
+
+Formato JSON (sem markdown):
+[
+  {
+    "type": "choice",
+    "question": "Qual a saída deste código?\\n\`\`\`c\\nint x = 5;\\nprintf(\\"%d\\", x++);\\n\`\`\`",
+    "options": ["5", "6", "4", "Erro"],
+    "correct": 0,
+    "explanation": "x++ é pós-incremento: imprime 5 primeiro, depois incrementa."
+  },
+  {
+    "type": "complete",
+    "question": "Complete o código para alocar memória para 10 inteiros:\\n\`\`\`c\\nint *p = ______(10 * sizeof(int));\\n\`\`\`",
+    "answer": "malloc",
+    "acceptAlso": ["(int*)malloc", "(int *)malloc"],
+    "explanation": "malloc() aloca memória dinamicamente no heap."
+  },
+  {
+    "type": "concept",
+    "question": "Em POO, qual pilar permite que uma classe filha redefina um método da classe pai?",
+    "options": ["Polimorfismo", "Encapsulamento", "Abstração", "Herança"],
+    "correct": 0,
+    "explanation": "Polimorfismo de sobrescrita (override) permite redefinir métodos herdados."
+  }
+]
+
+REGRAS:
+- Misture os 3 tipos (pelo menos 3 de cada tipo "choice" e "complete", e 2+ "concept")
+- Para "complete": resposta CURTA (1-5 palavras max)
+- Perguntas práticas no estilo que cai na prova
+- Inclua código C quando possível
+- APENAS JSON, sem texto antes ou depois`;
+
+        const r = await callGemini(prompt, SYSTEM_INSTRUCTION);
+        state.currentFlashcards = JSON.parse(r.replace(/```json?\n?/g,'').replace(/```/g,'').trim());
+        state.currentFlashIndex = 0;
+        flashScore = { correct: 0, wrong: 0 };
         document.getElementById('flashcard-area').classList.remove('hidden');
-        document.getElementById('flash-total').textContent=state.currentFlashcards.length;
+        document.getElementById('flash-results').classList.add('hidden');
+        document.getElementById('flash-total').textContent = state.currentFlashcards.length;
+        document.getElementById('flash-correct').textContent = 0;
+        document.getElementById('flash-wrong').textContent = 0;
         showFlash(); recordActivity();
+        updateModuleProgress(mod, 3);
     } catch(e) { alert(e.message); } finally { hideLoading(); }
 }
+
 function showFlash() {
-    const c=state.currentFlashcards[state.currentFlashIndex];
-    document.getElementById('flash-question').innerHTML=renderMarkdown(c.front);
-    document.getElementById('flash-answer').innerHTML=renderMarkdown(c.back);
-    document.getElementById('flash-current').textContent=state.currentFlashIndex+1;
-    document.getElementById('flashcard').classList.remove('flipped');
+    const cards = state.currentFlashcards;
+    if (!cards || state.currentFlashIndex >= cards.length) { showFlashResults(); return; }
+    const c = cards[state.currentFlashIndex];
+    const card = document.getElementById('flash-card');
+    const qText = document.getElementById('flash-question');
+    const inputArea = document.getElementById('flash-input-area');
+    const optionsDiv = document.getElementById('flash-options');
+    const feedback = document.getElementById('flash-feedback');
+    const explanation = document.getElementById('flash-explanation');
+    const badge = document.getElementById('flash-type-badge');
+    const nextBtn = document.getElementById('flash-next');
+    const skipBtn = document.getElementById('flash-skip');
+
+    // Reset
+    card.className = 'flash-card-question';
+    feedback.classList.add('hidden'); explanation.classList.add('hidden');
+    inputArea.classList.add('hidden'); optionsDiv.classList.add('hidden');
+    nextBtn.classList.add('hidden'); skipBtn.classList.remove('hidden');
+    document.getElementById('flash-current').textContent = state.currentFlashIndex + 1;
+    document.getElementById('flash-user-answer').value = '';
+
+    // Question
+    qText.innerHTML = renderMarkdown(c.question);
+
+    // Type badge
+    if (c.type === 'complete') { badge.textContent = '✏️ complete o código'; badge.className = 'flash-type-badge complete'; }
+    else if (c.type === 'choice') { badge.textContent = '🎯 múltipla escolha'; badge.className = 'flash-type-badge code'; }
+    else { badge.textContent = '💡 conceito'; badge.className = 'flash-type-badge'; }
+
+    // Show input or options
+    if (c.type === 'complete') {
+        inputArea.classList.remove('hidden');
+        document.getElementById('flash-user-answer').focus();
+    } else {
+        optionsDiv.classList.remove('hidden');
+        optionsDiv.innerHTML = '';
+        (c.options || []).forEach((opt, i) => {
+            const el = document.createElement('div');
+            el.className = 'flash-option';
+            el.innerHTML = renderMarkdown(opt);
+            el.addEventListener('click', () => selectFlashOption(i));
+            optionsDiv.appendChild(el);
+        });
+    }
 }
-function advFlash(knew) {
-    if(knew) { state.stats.correct++; addXp(2,'Flashcard'); }
-    state.stats.total++; saveStats(); updateMission('flashcards');
-    if(state.currentFlashIndex<state.currentFlashcards.length-1){state.currentFlashIndex++;showFlash();}
-    else alert('Flashcards completos!');
+
+function selectFlashOption(idx) {
+    const c = state.currentFlashcards[state.currentFlashIndex];
+    const opts = document.querySelectorAll('#flash-options .flash-option');
+    const ok = idx === c.correct;
+    opts.forEach(o => o.classList.add('disabled'));
+    opts[c.correct].classList.add('correct');
+    if (!ok) opts[idx].classList.add('wrong');
+    showFlashFeedback(ok, c.explanation);
+    flashRecord(ok);
+}
+
+function submitFlashAnswer() {
+    const c = state.currentFlashcards[state.currentFlashIndex];
+    const userAnswer = document.getElementById('flash-user-answer').value.trim().toLowerCase();
+    if (!userAnswer) return;
+    const correct = c.answer.toLowerCase();
+    const alts = (c.acceptAlso || []).map(a => a.toLowerCase());
+    const ok = userAnswer === correct || alts.includes(userAnswer) || correct.includes(userAnswer);
+    showFlashFeedback(ok, c.explanation + (ok ? '' : `\n\n**Resposta correta:** \`${c.answer}\``));
+    flashRecord(ok);
+}
+
+function showFlashFeedback(ok, explanationText) {
+    const card = document.getElementById('flash-card');
+    const feedback = document.getElementById('flash-feedback');
+    const explanation = document.getElementById('flash-explanation');
+    const nextBtn = document.getElementById('flash-next');
+    const skipBtn = document.getElementById('flash-skip');
+
+    card.classList.add(ok ? 'correct-border' : 'wrong-border');
+    feedback.className = `flash-feedback ${ok ? 'correct' : 'wrong'}`;
+    feedback.textContent = ok ? '✓ Correto!' : '✗ Errado!';
+    feedback.classList.remove('hidden');
+    explanation.innerHTML = renderMarkdown(explanationText || '');
+    explanation.classList.remove('hidden');
+    nextBtn.classList.remove('hidden');
+    skipBtn.classList.add('hidden');
+}
+
+function flashRecord(ok) {
+    if (ok) { flashScore.correct++; state.stats.correct++; addXp(3, 'Flashcard acerto'); }
+    else { flashScore.wrong++; }
+    state.stats.total++; saveStats();
+    document.getElementById('flash-correct').textContent = flashScore.correct;
+    document.getElementById('flash-wrong').textContent = flashScore.wrong;
+    updateMission('flashcards');
+    const mod = document.getElementById('flash-module').value;
+    if (mod) trackWeakness(mod, ok ? 1 : 0, 1);
+}
+
+function nextFlash() {
+    state.currentFlashIndex++;
+    if (state.currentFlashIndex >= state.currentFlashcards.length) showFlashResults();
+    else showFlash();
+}
+
+function showFlashResults() {
+    const total = flashScore.correct + flashScore.wrong;
+    const pct = total > 0 ? Math.round((flashScore.correct / total) * 100) : 0;
+    document.getElementById('flash-card').style.display = 'none';
+    document.getElementById('flash-skip').classList.add('hidden');
+    document.getElementById('flash-next').classList.add('hidden');
+    document.getElementById('flash-results').classList.remove('hidden');
+    document.getElementById('flash-results-pct').textContent = pct + '%';
+    document.getElementById('flash-results-detail').textContent = `${flashScore.correct} de ${total} corretos`;
+    document.getElementById('flash-results-xp').textContent = `+${flashScore.correct * 3} XP ganhos`;
+    if (pct >= 80) fireConfetti();
+    checkAchievements();
 }
 
 // ===== EXAM SIMULATOR =====
