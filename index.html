@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Academy Study Hub</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- XP Popup -->
+    <div id="xp-popup" class="xp-popup hidden">+<span id="xp-amount">0</span> XP</div>
+
+    <!-- Level Up Modal -->
+    <div id="levelup-modal" class="modal hidden">
+        <div class="modal-content levelup-content">
+            <div class="levelup-glow"></div>
+            <div class="levelup-icon">⚡</div>
+            <h2>LEVEL UP!</h2>
+            <p class="levelup-level">Nível <span id="levelup-number">2</span></p>
+            <p class="levelup-title" id="levelup-title"></p>
+            <button class="btn-primary" onclick="document.getElementById('levelup-modal').classList.add('hidden')">Continuar</button>
+        </div>
+    </div>
+
+    <!-- Achievement Toast -->
+    <div id="achievement-toast" class="achievement-toast hidden">
+        <span id="achievement-icon">🏆</span>
+        <div>
+            <strong id="achievement-name"></strong>
+            <p id="achievement-desc"></p>
+        </div>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="api-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-icon">🔑</div>
+            <h2>Conecte sua Gemini API</h2>
+            <p>Cole sua API Key do Google AI Studio para ativar o tutor IA.</p>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">Pegar minha API Key →</a>
+            <input type="password" id="api-key-input" placeholder="Cole sua API Key aqui..." autocomplete="off">
+            <button id="save-api-key" class="btn-primary">Conectar</button>
+            <p class="api-note">Sua chave fica salva apenas no seu navegador (localStorage).</p>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">🍎</span>
+                <span class="logo-text">Academy<br><small>Study Hub</small></span>
+            </div>
+            <!-- XP Bar in Sidebar -->
+            <div class="sidebar-xp">
+                <div class="xp-level-badge">Nv. <span id="sidebar-level">1</span></div>
+                <div class="xp-bar-mini">
+                    <div class="xp-bar-mini-fill" id="sidebar-xp-bar"></div>
+                </div>
+                <span class="xp-text-mini"><span id="sidebar-xp">0</span> XP</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Dashboard</span>
+            </li>
+            <li class="nav-item" data-page="missions">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-label">Missões Diárias</span>
+                <span class="nav-badge" id="missions-badge">3</span>
+            </li>
+            <li class="nav-item" data-page="learn">
+                <span class="nav-icon">📖</span>
+                <span class="nav-label">Aprender</span>
+            </li>
+            <li class="nav-item" data-page="review">
+                <span class="nav-icon">🔄</span>
+                <span class="nav-label">Revisão Espaçada</span>
+                <span class="nav-badge warning" id="review-badge">0</span>
+            </li>
+            <li class="nav-item" data-page="quiz">
+                <span class="nav-icon">🧠</span>
+                <span class="nav-label">Quiz</span>
+            </li>
+            <li class="nav-item" data-page="code">
+                <span class="nav-icon">💻</span>
+                <span class="nav-label">Desafios de Código</span>
+            </li>
+            <li class="nav-item" data-page="flashcards">
+                <span class="nav-icon">🃏</span>
+                <span class="nav-label">Flashcards</span>
+            </li>
+            <li class="nav-item" data-page="exam">
+                <span class="nav-icon">📝</span>
+                <span class="nav-label">Simulado</span>
+            </li>
+            <li class="nav-item" data-page="weaknesses">
+                <span class="nav-icon">🎯</span>
+                <span class="nav-label">Radar de Fraquezas</span>
+            </li>
+            <li class="nav-item" data-page="achievements">
+                <span class="nav-icon">🏆</span>
+                <span class="nav-label">Conquistas</span>
+            </li>
+            <li class="nav-item" data-page="chat">
+                <span class="nav-icon">💬</span>
+                <span class="nav-label">Tutor IA</span>
+            </li>
+            <li class="nav-item" data-page="pomodoro">
+                <span class="nav-icon">🍅</span>
+                <span class="nav-label">Pomodoro</span>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <button id="settings-btn" class="sidebar-btn">
+                <span>⚙️</span> Configurações
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Header -->
+    <header id="mobile-header">
+        <button id="menu-toggle">☰</button>
+        <span class="mobile-title">Academy Study Hub</span>
+        <div class="mobile-xp">Nv.<span id="mobile-level">1</span></div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="content">
+
+        <!-- DASHBOARD PAGE -->
+        <section id="page-dashboard" class="page active">
+            <div class="page-header">
+                <div class="header-row">
+                    <div>
+                        <h1>Seu Quartel General</h1>
+                        <p class="subtitle" id="greeting-text">Bora estudar!</p>
+                    </div>
+                    <div class="streak-display">
+                        <div class="streak-flame" id="streak-flame">🔥</div>
+                        <span class="streak-number" id="streak-count">0</span>
+                        <span class="streak-label">dias seguidos</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- XP Progress -->
+            <div class="xp-section">
+                <div class="xp-header">
+                    <div class="xp-level-display">
+                        <span class="level-number" id="dash-level">1</span>
+                        <span class="level-title" id="dash-title">Recruta</span>
+                    </div>
+                    <span class="xp-numbers"><span id="dash-xp">0</span> / <span id="dash-xp-next">100</span> XP</span>
+                </div>
+                <div class="xp-bar">
+                    <div class="xp-bar-fill" id="dash-xp-bar"></div>
+                </div>
+            </div>
+
+            <!-- Daily Missions Preview -->
+            <div class="missions-preview">
+                <div class="missions-header">
+                    <h2 class="section-title">🎯 Missões de Hoje</h2>
+                    <span class="missions-reward">+50 XP bônus ao completar todas</span>
+                </div>
+                <div id="dash-missions" class="dash-missions"></div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="quiz-count">0</span>
+                        <span class="stat-label">Quizzes feitos</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💻</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="code-count">0</span>
+                        <span class="stat-label">Desafios resolvidos</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="accuracy-pct">0%</span>
+                        <span class="stat-label">Taxa de acerto</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔄</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="review-pending">0</span>
+                        <span class="stat-label">Revisões pendentes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modules -->
+            <h2 class="section-title">Módulos de Estudo</h2>
+            <div class="modules-grid">
+                <div class="module-card" data-module="c-basics">
+                    <div class="module-header">
+                        <span class="module-icon">🔤</span>
+                        <span class="module-phase">Fase 1</span>
+                    </div>
+                    <h3>Base em C</h3>
+                    <p>Variáveis, condicionais, loops, funções, strings</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="c-basics"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="module-card" data-module="pointers">
+                    <div class="module-header">
+                        <span class="module-icon">📍</span>
+                        <span class="module-phase">Fase 2</span>
+                    </div>
+                    <h3>Vetores, Matrizes e Ponteiros</h3>
+                    <p>Vetores, matrizes, ponteiros, alocação dinâmica</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="pointers"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="module-card" data-module="sorting">
+                    <div class="module-header">
+                        <span class="module-icon">🔀</span>
+                        <span class="module-phase">Fase 3</span>
+                    </div>
+                    <h3>Ordenação e Busca</h3>
+                    <p>Bubble, Selection, Insertion, Quick Sort, Busca Binária</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="sorting"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="module-card" data-module="data-structures">
+                    <div class="module-header">
+                        <span class="module-icon">🏗️</span>
+                        <span class="module-phase">Fase 4</span>
+                    </div>
+                    <h3>Estrutura de Dados</h3>
+                    <p>Listas, pilhas, filas, árvores, grafos, hash</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="data-structures"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="module-card" data-module="oop">
+                    <div class="module-header">
+                        <span class="module-icon">🧬</span>
+                        <span class="module-phase">Fase 5</span>
+                    </div>
+                    <h3>POO — Conceitos</h3>
+                    <p>Abstração, encapsulamento, herança, polimorfismo</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="oop"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+                <div class="module-card" data-module="logic">
+                    <div class="module-header">
+                        <span class="module-icon">🧮</span>
+                        <span class="module-phase">Fase 6</span>
+                    </div>
+                    <h3>Lógica Matemática</h3>
+                    <p>Tabela verdade, proposições, De Morgan, predicados</p>
+                    <div class="progress-bar"><div class="progress-fill" data-progress="logic"></div></div>
+                    <span class="progress-text">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAILY MISSIONS PAGE -->
+        <section id="page-missions" class="page">
+            <div class="page-header">
+                <h1>🎯 Missões Diárias</h1>
+                <p class="subtitle">Complete todas para ganhar bônus de XP!</p>
+            </div>
+            <div class="missions-bonus-bar">
+                <span>Progresso:</span>
+                <div class="progress-bar" style="flex:1"><div class="progress-fill" id="missions-progress-fill"></div></div>
+                <span id="missions-progress-text">0/3</span>
+                <span class="missions-bonus-label">🎁 +50 XP bônus</span>
+            </div>
+            <div id="missions-list" class="missions-list"></div>
+        </section>
+
+        <!-- LEARN PAGE -->
+        <section id="page-learn" class="page">
+            <div class="page-header">
+                <h1>📖 Aprender</h1>
+                <p class="subtitle">Escolha um tópico para estudar com a IA <span class="xp-hint">+15 XP por aula</span></p>
+            </div>
+            <div class="topic-selector">
+                <select id="learn-module">
+                    <option value="">Selecione o módulo...</option>
+                    <option value="c-basics">Fase 1 — Base em C</option>
+                    <option value="pointers">Fase 2 — Vetores, Matrizes e Ponteiros</option>
+                    <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                    <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                    <option value="oop">Fase 5 — POO Conceitos</option>
+                    <option value="logic">Fase 6 — Lógica Matemática</option>
+                </select>
+                <select id="learn-topic"><option value="">Selecione o tópico...</option></select>
+                <button id="start-lesson" class="btn-primary" disabled>Iniciar Aula</button>
+            </div>
+            <div id="lesson-content" class="lesson-area">
+                <div class="lesson-placeholder">
+                    <span class="placeholder-icon">📖</span>
+                    <p>Selecione um módulo e tópico para começar a estudar.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SPACED REVIEW PAGE -->
+        <section id="page-review" class="page">
+            <div class="page-header">
+                <h1>🔄 Revisão Espaçada</h1>
+                <p class="subtitle">Tópicos que precisam ser revisados para não esquecer <span class="xp-hint">+20 XP por revisão</span></p>
+            </div>
+            <div id="review-empty" class="lesson-placeholder">
+                <span class="placeholder-icon">✨</span>
+                <p>Nenhuma revisão pendente! Estude novos tópicos para alimentar o sistema.</p>
+            </div>
+            <div id="review-list" class="review-list"></div>
+        </section>
+
+        <!-- QUIZ PAGE -->
+        <section id="page-quiz" class="page">
+            <div class="page-header">
+                <h1>🧠 Quiz</h1>
+                <p class="subtitle">Teste seus conhecimentos <span class="xp-hint">+5 XP por acerto</span></p>
+            </div>
+            <div id="quiz-setup" class="quiz-setup">
+                <select id="quiz-module">
+                    <option value="">Selecione o módulo...</option>
+                    <option value="c-basics">Fase 1 — Base em C</option>
+                    <option value="pointers">Fase 2 — Vetores, Matrizes e Ponteiros</option>
+                    <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                    <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                    <option value="oop">Fase 5 — POO Conceitos</option>
+                    <option value="logic">Fase 6 — Lógica Matemática</option>
+                    <option value="all">Todos os módulos (simulado rápido)</option>
+                </select>
+                <div class="difficulty-selector">
+                    <label>Dificuldade:</label>
+                    <div class="difficulty-options">
+                        <button class="diff-btn active" data-diff="easy">Fácil</button>
+                        <button class="diff-btn" data-diff="medium">Médio</button>
+                        <button class="diff-btn" data-diff="hard">Difícil</button>
+                    </div>
+                </div>
+                <div class="question-count-selector">
+                    <label>Questões:</label>
+                    <div class="count-options">
+                        <button class="count-btn" data-count="5">5</button>
+                        <button class="count-btn active" data-count="10">10</button>
+                        <button class="count-btn" data-count="20">20</button>
+                    </div>
+                </div>
+                <button id="start-quiz" class="btn-primary" disabled>Gerar Quiz com IA</button>
+            </div>
+            <div id="quiz-area" class="quiz-area hidden">
+                <div class="quiz-header">
+                    <span id="quiz-progress">Questão 1 de 10</span>
+                    <span id="quiz-score">Acertos: 0</span>
+                    <span id="quiz-timer">⏱ 00:00</span>
+                </div>
+                <div id="quiz-question" class="quiz-question"></div>
+                <div id="quiz-options" class="quiz-options"></div>
+                <div id="quiz-feedback" class="quiz-feedback hidden"></div>
+                <button id="quiz-next" class="btn-primary hidden">Próxima →</button>
+            </div>
+            <div id="quiz-results" class="quiz-results hidden">
+                <div class="results-card">
+                    <h2>Resultado do Quiz</h2>
+                    <div class="results-score">
+                        <span id="results-pct">0%</span>
+                        <span id="results-detail">0 de 10 corretas</span>
+                    </div>
+                    <div id="results-xp" class="results-xp"></div>
+                    <div id="results-message"></div>
+                    <button id="quiz-retry" class="btn-primary">Tentar Novamente</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- CODE CHALLENGES PAGE -->
+        <section id="page-code" class="page">
+            <div class="page-header">
+                <h1>💻 Desafios de Código</h1>
+                <p class="subtitle">Pratique programação em C <span class="xp-hint">+30 XP por desafio correto</span></p>
+            </div>
+            <div class="code-setup">
+                <select id="code-module">
+                    <option value="">Selecione o módulo...</option>
+                    <option value="c-basics">Fase 1 — Base em C</option>
+                    <option value="pointers">Fase 2 — Vetores, Matrizes e Ponteiros</option>
+                    <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                    <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                </select>
+                <div class="difficulty-selector">
+                    <label>Dificuldade:</label>
+                    <div class="difficulty-options">
+                        <button class="code-diff-btn active" data-diff="easy">Fácil</button>
+                        <button class="code-diff-btn" data-diff="medium">Médio</button>
+                        <button class="code-diff-btn" data-diff="hard">Difícil</button>
+                    </div>
+                </div>
+                <button id="generate-challenge" class="btn-primary" disabled>Gerar Desafio</button>
+            </div>
+            <div id="code-challenge" class="code-challenge hidden">
+                <div id="challenge-description" class="challenge-desc"></div>
+                <div class="code-editor-wrapper">
+                    <div class="editor-header">
+                        <span>main.c</span>
+                        <div class="editor-actions">
+                            <button id="hint-btn" class="btn-secondary">💡 Dica</button>
+                            <button id="submit-code" class="btn-primary">▶ Avaliar Código</button>
+                        </div>
+                    </div>
+                    <textarea id="code-editor" spellcheck="false" placeholder="// Escreva seu código em C aqui...
+#include <stdio.h>
+
+int main() {
+
+    return 0;
+}"></textarea>
+                </div>
+                <div id="code-feedback" class="code-feedback hidden"></div>
+            </div>
+        </section>
+
+        <!-- FLASHCARDS PAGE -->
+        <section id="page-flashcards" class="page">
+            <div class="page-header">
+                <h1>🃏 Flashcards</h1>
+                <p class="subtitle">Memorize conceitos chave <span class="xp-hint">+2 XP por card</span></p>
+            </div>
+            <div class="flashcard-setup">
+                <select id="flash-module">
+                    <option value="">Selecione o módulo...</option>
+                    <option value="c-basics">Fase 1 — Base em C</option>
+                    <option value="pointers">Fase 2 — Ponteiros</option>
+                    <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                    <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                    <option value="oop">Fase 5 — POO Conceitos</option>
+                    <option value="logic">Fase 6 — Lógica Matemática</option>
+                </select>
+                <button id="generate-flashcards" class="btn-primary" disabled>Gerar Flashcards</button>
+            </div>
+            <div id="flashcard-area" class="flashcard-area hidden">
+                <div class="flashcard-counter"><span id="flash-current">1</span> / <span id="flash-total">10</span></div>
+                <div id="flashcard" class="flashcard" tabindex="0">
+                    <div class="flashcard-inner">
+                        <div class="flashcard-front"><p id="flash-question"></p></div>
+                        <div class="flashcard-back"><p id="flash-answer"></p></div>
+                    </div>
+                </div>
+                <p class="flash-hint">Clique no card para virar</p>
+                <div class="flashcard-controls">
+                    <button id="flash-prev" class="btn-secondary">← Anterior</button>
+                    <button id="flash-knew" class="btn-success">✓ Sabia</button>
+                    <button id="flash-didnt" class="btn-danger">✗ Não sabia</button>
+                    <button id="flash-next" class="btn-secondary">Próximo →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- EXAM SIMULATOR -->
+        <section id="page-exam" class="page">
+            <div class="page-header">
+                <h1>📝 Simulado Completo</h1>
+                <p class="subtitle">Simule a prova real com tempo e pressão <span class="xp-hint">+100 XP ao completar</span></p>
+            </div>
+            <div id="exam-setup" class="exam-setup">
+                <div class="exam-info-card">
+                    <h3>Formato da Prova</h3>
+                    <ul>
+                        <li><strong>30 questões</strong> de múltipla escolha</li>
+                        <li><strong>6 módulos</strong> — 5 questões de cada</li>
+                        <li><strong>90 minutos</strong> de tempo (cronometrado)</li>
+                        <li>Dificuldade <strong>mista</strong> (fácil, médio e difícil)</li>
+                    </ul>
+                    <p class="exam-warning">⚠️ Assim que iniciar, o cronômetro começa e não pode ser pausado!</p>
+                </div>
+                <button id="start-exam" class="btn-primary btn-large">Iniciar Simulado</button>
+            </div>
+            <div id="exam-area" class="quiz-area hidden">
+                <div class="quiz-header exam-header">
+                    <span id="exam-progress">Questão 1 de 30</span>
+                    <span id="exam-score">Acertos: 0</span>
+                    <span id="exam-timer" class="exam-timer-display">⏱ 90:00</span>
+                </div>
+                <div id="exam-module-tag" class="exam-module-tag"></div>
+                <div id="exam-question" class="quiz-question"></div>
+                <div id="exam-options" class="quiz-options"></div>
+                <div id="exam-feedback" class="quiz-feedback hidden"></div>
+                <button id="exam-next" class="btn-primary hidden">Próxima →</button>
+            </div>
+            <div id="exam-results" class="quiz-results hidden">
+                <div class="results-card exam-results-card">
+                    <h2>Resultado do Simulado</h2>
+                    <div class="results-score">
+                        <span id="exam-results-pct">0%</span>
+                        <span id="exam-results-detail">0 de 30 corretas</span>
+                    </div>
+                    <div id="exam-results-xp" class="results-xp"></div>
+                    <div id="exam-results-time"></div>
+                    <div id="exam-results-breakdown" class="exam-breakdown"></div>
+                    <div id="exam-results-message"></div>
+                    <button id="exam-retry" class="btn-primary">Fazer Outro Simulado</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- WEAKNESS RADAR -->
+        <section id="page-weaknesses" class="page">
+            <div class="page-header">
+                <h1>🎯 Radar de Fraquezas</h1>
+                <p class="subtitle">Veja onde você precisa melhorar</p>
+            </div>
+            <div id="weakness-content" class="weakness-content">
+                <div class="weakness-chart">
+                    <div class="radar-visual" id="radar-visual"></div>
+                </div>
+                <div id="weakness-details" class="weakness-details"></div>
+            </div>
+        </section>
+
+        <!-- ACHIEVEMENTS PAGE -->
+        <section id="page-achievements" class="page">
+            <div class="page-header">
+                <h1>🏆 Conquistas</h1>
+                <p class="subtitle">Desbloqueie todas!</p>
+            </div>
+            <div id="achievements-grid" class="achievements-grid"></div>
+        </section>
+
+        <!-- CHAT / TUTOR PAGE -->
+        <section id="page-chat" class="page">
+            <div class="page-header">
+                <h1>💬 Tutor IA</h1>
+                <p class="subtitle">Tire dúvidas sobre qualquer tópico <span class="xp-hint">+3 XP por pergunta</span></p>
+            </div>
+            <div id="chat-container" class="chat-container">
+                <div id="chat-messages" class="chat-messages">
+                    <div class="chat-msg bot">
+                        <div class="msg-avatar">🤖</div>
+                        <div class="msg-content">
+                            <p>Olá! Sou seu tutor IA focado na prova da Apple Academy. Pode me perguntar sobre:</p>
+                            <ul>
+                                <li><strong>Linguagem C</strong> — variáveis, ponteiros, structs...</li>
+                                <li><strong>Estrutura de Dados</strong> — listas, pilhas, árvores...</li>
+                                <li><strong>POO</strong> — conceitos dos 4 pilares</li>
+                                <li><strong>Lógica Matemática</strong> — tabela verdade, predicados...</li>
+                            </ul>
+                            <p>Manda sua dúvida!</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="quick-prompts">
+                        <button class="quick-prompt" data-prompt="Explique ponteiros em C como se eu tivesse 5 anos">Ponteiros simples</button>
+                        <button class="quick-prompt" data-prompt="Qual a diferença entre pilha e fila?">Pilha vs Fila</button>
+                        <button class="quick-prompt" data-prompt="Me explique polimorfismo com exemplos do dia a dia">Polimorfismo</button>
+                        <button class="quick-prompt" data-prompt="Como funciona a tabela verdade? Me dê macetes">Tabela Verdade</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <textarea id="chat-input" placeholder="Faça sua pergunta..." rows="1"></textarea>
+                        <button id="chat-send" class="btn-primary">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POMODORO PAGE -->
+        <section id="page-pomodoro" class="page">
+            <div class="page-header">
+                <h1>🍅 Pomodoro Timer</h1>
+                <p class="subtitle">Estude com foco e descanse no momento certo <span class="xp-hint">+10 XP por ciclo completo</span></p>
+            </div>
+            <div class="pomodoro-container">
+                <div class="pomodoro-display">
+                    <div class="pomodoro-ring" id="pomodoro-ring">
+                        <svg viewBox="0 0 200 200">
+                            <circle cx="100" cy="100" r="90" class="ring-bg"/>
+                            <circle cx="100" cy="100" r="90" class="ring-progress" id="pomo-circle"/>
+                        </svg>
+                        <div class="pomodoro-time" id="pomo-time">25:00</div>
+                        <div class="pomodoro-label" id="pomo-label">FOCO</div>
+                    </div>
+                </div>
+                <div class="pomodoro-controls">
+                    <button id="pomo-start" class="btn-primary btn-large">Iniciar</button>
+                    <button id="pomo-reset" class="btn-secondary">Resetar</button>
+                </div>
+                <div class="pomodoro-settings">
+                    <div class="pomo-setting">
+                        <label>Foco</label>
+                        <div class="pomo-adjust">
+                            <button class="pomo-adj-btn" data-target="focus" data-dir="-1">−</button>
+                            <span id="pomo-focus-val">25</span> min
+                            <button class="pomo-adj-btn" data-target="focus" data-dir="1">+</button>
+                        </div>
+                    </div>
+                    <div class="pomo-setting">
+                        <label>Descanso</label>
+                        <div class="pomo-adjust">
+                            <button class="pomo-adj-btn" data-target="break" data-dir="-1">−</button>
+                            <span id="pomo-break-val">5</span> min
+                            <button class="pomo-adj-btn" data-target="break" data-dir="1">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="pomodoro-stats">
+                    <span>🍅 Ciclos hoje: <strong id="pomo-cycles">0</strong></span>
+                    <span>⏱ Tempo total: <strong id="pomo-total">0h 0min</strong></span>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel hidden">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Configurações</h2>
+                <button id="close-settings">✕</button>
+            </div>
+            <div class="setting-item">
+                <label>Provedor de IA</label>
+                <p class="setting-desc">Escolha qual IA usar no sistema.</p>
+                <div class="provider-tabs">
+                    <button class="provider-tab active" data-provider="gemini">Gemini</button>
+                    <button class="provider-tab" data-provider="claude">Claude</button>
+                </div>
+            </div>
+            <div id="gemini-settings">
+                <div class="setting-item">
+                    <label>API Key do Gemini</label>
+                    <div class="setting-row">
+                        <input type="password" id="settings-api-key" placeholder="Sua API Key Gemini...">
+                        <button id="update-api-key" class="btn-secondary">Salvar</button>
+                    </div>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link" style="margin-top:6px;font-size:0.8rem;">Pegar API Key do Gemini →</a>
+                </div>
+                <div class="setting-item">
+                    <label>Modelo Gemini</label>
+                    <p class="setting-desc">Se a cota de um modelo esgotar, troca automática.</p>
+                    <select id="settings-model">
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash (recomendado)</option>
+                        <option value="gemma-4-28b-it">Gemma 4 28B (backup)</option>
+                        <option value="gemma-4-31b-it">Gemma 4 31B (backup)</option>
+                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                        <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                    </select>
+                    <a href="https://aistudio.google.com/rate-limit" target="_blank" class="api-link" style="margin-top:8px;font-size:0.8rem;">Ver minhas cotas no AI Studio →</a>
+                </div>
+            </div>
+            <div id="claude-settings" style="display:none">
+                <div class="setting-item">
+                    <label>API Key do Claude (Anthropic)</label>
+                    <div class="setting-row">
+                        <input type="password" id="settings-claude-key" placeholder="sk-ant-...">
+                        <button id="update-claude-key" class="btn-secondary">Salvar</button>
+                    </div>
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="api-link" style="margin-top:6px;font-size:0.8rem;">Pegar API Key do Claude →</a>
+                </div>
+                <div class="setting-item">
+                    <label>Modelo Claude</label>
+                    <select id="settings-claude-model">
+                        <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (recomendado)</option>
+                        <option value="claude-haiku-4-20250414">Claude Haiku 4 (mais rápido)</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku (mais barato)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label>Backup do Progresso</label>
+                <p class="setting-desc">Exporte seus dados para não perder nada. Importe em qualquer navegador.</p>
+                <div class="backup-buttons">
+                    <button id="export-data" class="btn-success">⬇ Exportar Backup</button>
+                    <label class="btn-secondary import-label" for="import-file">⬆ Importar Backup</label>
+                    <input type="file" id="import-file" accept=".json" style="display:none">
+                </div>
+                <p class="setting-desc" id="last-backup-info" style="margin-top:8px;"></p>
+            </div>
+            <div class="setting-item">
+                <label>Resetar Progresso</label>
+                <p class="setting-desc">Isso apaga todo seu progresso salvo.</p>
+                <button id="reset-progress" class="btn-danger">Resetar Tudo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader">
+            <div class="loader-spinner"></div>
+            <p id="loading-text">Gerando conteúdo com IA...</p>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
