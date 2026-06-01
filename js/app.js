@@ -75,28 +75,78 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMobile(); setupExamPage(); setupPomodoroPage(); setupVideosPage();
 });
 
-// ===== CURATED VIDEOS (from Apple Academy repo + ex-students) =====
+// ===== CURATED VIDEOS (organized by subtopic) =====
 const CURATED_VIDEOS = [
-    // Fase 1 — Base em C
-    { id: 'PLOXIs3c4k2TeQOyb-uQwHkKkpT1zPTWm6', title: 'Playlist Completa de C — Eduardo Casavella', module: 'c-basics', type: 'playlist' },
-    { id: 'PLa75BYTPDNKZWYypgOFEsX3H2Mg-SzuLW', title: 'C de Aluno para Aluno', module: 'c-basics', type: 'playlist' },
-    { id: 'yrWIlIVZHB0', title: 'Linguagem C do Zero — Programe Seu Futuro', module: 'c-basics', type: 'video' },
-    { id: 'niTmi2OiCto', title: 'Funções em C (parte 1)', module: 'c-basics', type: 'video' },
-    { id: 'jd9PABbIvbA', title: 'Funções em C (parte 2)', module: 'c-basics', type: 'video' },
-    // Fase 2 — Ponteiros
-    { id: '2ybLD6_2gKM', title: 'Ponteiros em C — Explicação Completa', module: 'pointers', type: 'video' },
-    { id: 'w276EE-i8vI', title: 'Ponteiros em C — Detalhado', module: 'pointers', type: 'video' },
-    { id: 'D5QvQmes198', title: 'Ponteiros — Prática', module: 'pointers', type: 'video' },
-    { id: '4yVCGgEE9bc', title: 'Vetores em C — Explicação', module: 'pointers', type: 'video' },
-    { id: '5fSf9xSJK7c', title: 'Vetores em C — Prática', module: 'pointers', type: 'video' },
-    { id: 'YyWMN_0g3BQ', title: 'Memory Management e C — Fabio Akita (GOAT)', module: 'pointers', type: 'video' },
-    // Fase 4 — Estrutura de Dados
-    { id: 'PLqJK4Oyr5WSjQ584hwqaHJYDpDcYqS-HK', title: 'Estrutura de Dados — Playlist Completa', module: 'data-structures', type: 'playlist' },
-    { id: 'Czcc5EUR_yQ', title: 'Estrutura de Dados em C — Série', module: 'data-structures', type: 'video' },
-    { id: '7fwPj13AJOg', title: 'Árvore Binária em C — Kauã Miguel (ex-Academy)', module: 'data-structures', type: 'video' },
-    // Fase 6 — Lógica
-    { id: 'PltqUuwR9ec', title: 'Lógica Matemática — Playlist Completa', module: 'logic', type: 'video' },
-    { id: 'tiARjzPh2pI', title: 'Lógica para Concursos — Macetes', module: 'logic', type: 'video' },
+    // ── Fase 1 — Base em C ──
+    // Playlists completas
+    { id: 'PLOXIs3c4k2TeQOyb-uQwHkKkpT1zPTWm6', title: '📚 Playlist Completa de C — Eduardo Casavella', module: 'c-basics', topic: 'Curso Completo', type: 'playlist' },
+    { id: 'PLa75BYTPDNKZWYypgOFEsX3H2Mg-SzuLW', title: '📚 C de Aluno para Aluno — Playlist', module: 'c-basics', topic: 'Curso Completo', type: 'playlist' },
+    { id: 'yrWIlIVZHB0', title: '📚 Linguagem C do Zero — Programe Seu Futuro', module: 'c-basics', topic: 'Curso Completo', type: 'video' },
+    // Variáveis e tipos
+    { id: 'JFBBMBHjzOA', title: 'Variáveis e Tipos de Dados em C', module: 'c-basics', topic: 'Variáveis e Tipos', type: 'video' },
+    { id: 'SdGLBGsOmBc', title: 'int, float, char, double — Quando usar cada um', module: 'c-basics', topic: 'Variáveis e Tipos', type: 'video' },
+    // Entrada e saída
+    { id: '4zhBU9cBa-s', title: 'printf e scanf — Entrada e Saída em C', module: 'c-basics', topic: 'Entrada e Saída', type: 'video' },
+    // Condicionais
+    { id: 'ozFe1-zfnDc', title: 'if, else if, else — Estruturas Condicionais', module: 'c-basics', topic: 'Condicionais', type: 'video' },
+    { id: 'rFlMGGFJKsM', title: 'Switch Case em C — Quando usar', module: 'c-basics', topic: 'Condicionais', type: 'video' },
+    // Loops
+    { id: 'Xqk-vVD5Tqw', title: 'for, while, do-while — Loops em C', module: 'c-basics', topic: 'Loops', type: 'video' },
+    { id: 'yL8Q_3sJkLo', title: 'Loop for — Exemplos Práticos', module: 'c-basics', topic: 'Loops', type: 'video' },
+    // Funções
+    { id: 'niTmi2OiCto', title: 'Funções em C — Parte 1 (conceito e sintaxe)', module: 'c-basics', topic: 'Funções', type: 'video' },
+    { id: 'jd9PABbIvbA', title: 'Funções em C — Parte 2 (retorno e parâmetros)', module: 'c-basics', topic: 'Funções', type: 'video' },
+    // Strings
+    { id: 'MsyBEtGLVh4', title: 'Strings em C — char[], strlen, strcpy, strcmp', module: 'c-basics', topic: 'Strings', type: 'video' },
+
+    // ── Fase 2 — Vetores, Matrizes e Ponteiros ──
+    // Vetores
+    { id: '4yVCGgEE9bc', title: 'Vetores em C — Declaração e Percorrimento', module: 'pointers', topic: 'Vetores', type: 'video' },
+    { id: '5fSf9xSJK7c', title: 'Vetores em C — Exercícios Práticos', module: 'pointers', topic: 'Vetores', type: 'video' },
+    // Matrizes
+    { id: 'Xep4IVdJYSs', title: 'Matrizes em C — Vetores bidimensionais', module: 'pointers', topic: 'Matrizes', type: 'video' },
+    // Ponteiros
+    { id: '2ybLD6_2gKM', title: 'Ponteiros em C — Explicação Completa', module: 'pointers', topic: 'Ponteiros', type: 'video' },
+    { id: 'w276EE-i8vI', title: 'Ponteiros — Operadores & e * detalhado', module: 'pointers', topic: 'Ponteiros', type: 'video' },
+    { id: 'D5QvQmes198', title: 'Aritmética de Ponteiros — Prática', module: 'pointers', topic: 'Ponteiros', type: 'video' },
+    // Ponteiro para Ponteiro
+    { id: 'YyWMN_0g3BQ', title: 'Memory Management e C — Fabio Akita', module: 'pointers', topic: 'Ponteiro para Ponteiro', type: 'video' },
+    // Alocação Dinâmica
+    { id: 'JQXYgb_FWWM', title: 'malloc, calloc, realloc, free — Alocação Dinâmica', module: 'pointers', topic: 'Alocação Dinâmica', type: 'video' },
+
+    // ── Fase 3 — Ordenação e Busca ──
+    { id: 'vBB0A3WzNJU', title: 'Busca Linear e Busca Binária em C', module: 'sorting', topic: 'Busca', type: 'video' },
+    { id: 'TZRWRjq2CAg', title: 'Bubble Sort — Explicação Visual + Código C', module: 'sorting', topic: 'Bubble Sort', type: 'video' },
+    { id: 'bCFJGHMlCio', title: 'Selection Sort — Como funciona + Código', module: 'sorting', topic: 'Selection Sort', type: 'video' },
+    { id: '2dMpoSCmx3Y', title: 'Insertion Sort — Passo a passo', module: 'sorting', topic: 'Insertion Sort', type: 'video' },
+    { id: 'wx5juM9bbFo', title: 'Quick Sort — O mais rápido (explicação + código)', module: 'sorting', topic: 'Quick Sort', type: 'video' },
+    { id: '_HBTCUNPxOg', title: 'Complexidade Big O — Entenda de vez', module: 'sorting', topic: 'Complexidade', type: 'video' },
+
+    // ── Fase 4 — Estrutura de Dados ──
+    { id: 'PLqJK4Oyr5WSjQ584hwqaHJYDpDcYqS-HK', title: '📚 Estrutura de Dados — Playlist Completa', module: 'data-structures', topic: 'Curso Completo', type: 'playlist' },
+    { id: 'Czcc5EUR_yQ', title: 'Lista Encadeada em C — Do zero', module: 'data-structures', topic: 'Lista Encadeada', type: 'video' },
+    { id: 'MvfgMKMOFqY', title: 'Lista Duplamente Encadeada — Conceito + Código', module: 'data-structures', topic: 'Lista Encadeada', type: 'video' },
+    { id: '7bKxiGlPEz0', title: 'Pilha (Stack) — Push, Pop, implementação em C', module: 'data-structures', topic: 'Pilha', type: 'video' },
+    { id: 'B17bh2hLwJM', title: 'Fila (Queue) — Enqueue, Dequeue em C', module: 'data-structures', topic: 'Fila', type: 'video' },
+    { id: '7fwPj13AJOg', title: 'Árvore Binária em C — Kauã Miguel (ex-Academy)', module: 'data-structures', topic: 'Árvore Binária', type: 'video' },
+    { id: 'l9LiHj1UEpQ', title: 'Percursos em Árvore — In-order, Pre-order, Post-order', module: 'data-structures', topic: 'Árvore Binária', type: 'video' },
+    { id: 'MC0u4f1wmDc', title: 'Grafos — Conceito e Representação', module: 'data-structures', topic: 'Grafo', type: 'video' },
+    { id: 'JrsJRkMpJkQ', title: 'Tabela Hash — Como funciona + Colisões', module: 'data-structures', topic: 'Tabela Hash', type: 'video' },
+
+    // ── Fase 5 — POO ──
+    { id: 'QY0Kdg83wMk', title: 'Os 4 Pilares da POO — Resumo completo', module: 'oop', topic: 'Visão Geral', type: 'video' },
+    { id: 'xDKKt9LHM_0', title: 'Abstração — O que é e pra que serve', module: 'oop', topic: 'Abstração', type: 'video' },
+    { id: 'x3MfTSsmAfk', title: 'Encapsulamento — Getters, Setters, private/public', module: 'oop', topic: 'Encapsulamento', type: 'video' },
+    { id: 'He887D2WGVw', title: 'Herança — Classe pai e filha', module: 'oop', topic: 'Herança', type: 'video' },
+    { id: 'JFr8FxIMBcY', title: 'Polimorfismo — Sobrecarga vs Sobrescrita', module: 'oop', topic: 'Polimorfismo', type: 'video' },
+
+    // ── Fase 6 — Lógica Matemática ──
+    { id: 'PltqUuwR9ec', title: '📚 Lógica Matemática — Playlist Completa', module: 'logic', topic: 'Curso Completo', type: 'video' },
+    { id: 'tiARjzPh2pI', title: 'Lógica para Concursos — Macetes', module: 'logic', topic: 'Macetes', type: 'video' },
+    { id: 'YCxN6za0fwY', title: 'Tabela Verdade — Passo a passo', module: 'logic', topic: 'Tabela Verdade', type: 'video' },
+    { id: '2cE1awsJEC4', title: 'Conectivos Lógicos — E, OU, NÃO, SE...ENTÃO', module: 'logic', topic: 'Conectivos', type: 'video' },
+    { id: 'Ga-VpbTjc3w', title: 'Leis de De Morgan — Negação de proposições', module: 'logic', topic: 'De Morgan', type: 'video' },
+    { id: 'u2P2MvsDHcY', title: 'Quantificadores ∀ e ∃ — Lógica de Predicados', module: 'logic', topic: 'Predicados', type: 'video' },
 ];
 
 // ===== GEMINI API =====
@@ -1149,7 +1199,7 @@ function setupVideosPage() {
 
     function renderVideos() {
         const mod = filter.value;
-        const allVideos = [...CURATED_VIDEOS, ...customVideos];
+        const allVideos = [...CURATED_VIDEOS, ...customVideos.map(v => ({...v, topic: v.topic || 'Meus vídeos'}))];
         const filtered = mod === 'all' ? allVideos : allVideos.filter(v => v.module === mod);
         const grid = document.getElementById('videos-grid');
 
@@ -1158,24 +1208,42 @@ function setupVideosPage() {
             return;
         }
 
-        grid.innerHTML = filtered.map((v, i) => {
-            const watched = watchedVideos.includes(v.id);
-            const modName = TOPICS[v.module]?.name || 'Geral';
-            const deleteBtn = v.custom ? `<span class="video-delete" data-vid="${v.id}" title="Remover">✕</span>` : '';
-            return `<div class="video-card">
-                <iframe src="${getEmbedUrl(v)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-                <div class="video-card-info">
-                    <h4>${v.title}</h4>
-                    <div class="video-meta">
-                        <span class="video-module-tag">${modName}</span>
-                        <span>
+        // Group by topic
+        const groups = {};
+        filtered.forEach(v => {
+            const topic = v.topic || TOPICS[v.module]?.name || 'Geral';
+            if (!groups[topic]) groups[topic] = [];
+            groups[topic].push(v);
+        });
+
+        let html = '';
+        Object.keys(groups).forEach(topic => {
+            const videos = groups[topic];
+            const watchedCount = videos.filter(v => watchedVideos.includes(v.id)).length;
+            html += `<div class="video-topic-group">
+                <div class="video-topic-header">
+                    <h3>${topic}</h3>
+                    <span class="video-topic-count">${watchedCount}/${videos.length} assistidos</span>
+                </div>
+                <div class="video-topic-grid">`;
+            html += videos.map(v => {
+                const watched = watchedVideos.includes(v.id);
+                const deleteBtn = v.custom ? `<span class="video-delete" data-vid="${v.id}" title="Remover">✕</span>` : '';
+                return `<div class="video-card ${watched ? 'watched' : ''}">
+                    <iframe src="${getEmbedUrl(v)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+                    <div class="video-card-info">
+                        <h4>${v.title}</h4>
+                        <div class="video-meta">
                             <span class="video-watched" data-vid="${v.id}">${watched ? '✅ Assistido' : '👁 Marcar assistido'}</span>
                             ${deleteBtn}
-                        </span>
+                        </div>
                     </div>
-                </div>
-            </div>`;
-        }).join('');
+                </div>`;
+            }).join('');
+            html += '</div></div>';
+        });
+
+        grid.innerHTML = html;
 
         // Watch toggle
         grid.querySelectorAll('.video-watched').forEach(el => {

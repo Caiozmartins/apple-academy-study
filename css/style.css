@@ -413,7 +413,12 @@ body {
 .add-video-form input, .add-video-form select { flex: 1; min-width: 200px; padding: 10px 14px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem; font-family: 'Inter', sans-serif; }
 .add-video-form input:focus { outline: none; border-color: var(--accent); }
 .add-video-form .btn-primary { width: auto; min-width: 100px; }
-.videos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.videos-grid { display: flex; flex-direction: column; gap: 28px; }
+.video-topic-group { }
+.video-topic-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.video-topic-header h3 { font-size: 1rem; font-weight: 700; }
+.video-topic-count { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+.video-topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 .video-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: var(--transition); }
 .video-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow); }
 .video-card iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
@@ -423,6 +428,8 @@ body {
 .video-card-info .video-module-tag { font-size: 0.7rem; color: var(--accent); background: rgba(139, 105, 20, 0.12); padding: 2px 8px; border-radius: 10px; font-weight: 600; }
 .video-card-info .video-watched { font-size: 0.75rem; color: var(--success); font-weight: 600; cursor: pointer; }
 .video-card-info .video-watched:hover { text-decoration: underline; }
+.video-card.watched { opacity: 0.7; border-color: var(--success); }
+.video-card.watched:hover { opacity: 1; }
 .video-card .video-delete { font-size: 0.75rem; color: var(--danger); cursor: pointer; margin-left: 8px; }
 
 /* ===== CHAT ===== */
