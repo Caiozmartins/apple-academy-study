@@ -677,51 +677,45 @@ function setupFlashcardsPage() {
 
 let flashScore = { correct: 0, wrong: 0 };
 
+function fixJSON(raw) {
+    let s = raw.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+    // Find the array boundaries
+    const start = s.indexOf('[');
+    const end = s.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('JSON inválido');
+    s = s.substring(start, end + 1);
+    // Fix common issues: trailing commas, unescaped newlines in strings
+    s = s.replace(/,\s*([}\]])/g, '$1');
+    // Try parsing
+    try { return JSON.parse(s); } catch(e) {
+        // Try fixing unescaped control chars inside strings
+        s = s.replace(/[\x00-\x1f]/g, m => m === '\n' ? '\\n' : m === '\t' ? '\\t' : '');
+        return JSON.parse(s);
+    }
+}
+
 async function generateFlashcards() {
     const mod=document.getElementById('flash-module').value; if(!mod) return;
     showLoading('Gerando flashcards interativos...');
     try {
-        const prompt = `Gere 10 flashcards interativos sobre "${TOPICS[mod].name}" para a prova da Apple Developer Academy.
+        const prompt = `Gere 8 flashcards sobre "${TOPICS[mod].name}" para a Apple Developer Academy. Misture 3 tipos:
 
-MISTURE 3 tipos de card:
-1. "choice" — pergunta com 4 opções (apenas 1 correta). Inclua código C quando relevante.
-2. "complete" — mostre um trecho de código C com uma parte faltando (____) e peça pro aluno completar. A resposta deve ser curta (1 linha).
-3. "concept" — pergunta conceitual direta com 4 opções.
+Tipo "choice": pergunta com 4 opcoes, apenas 1 correta. Use codigo C quando possivel.
+Tipo "complete": trecho de codigo C com ____ pra preencher. Resposta curta (1 palavra).
+Tipo "concept": pergunta conceitual com 4 opcoes.
 
-Formato JSON (sem markdown):
-[
-  {
-    "type": "choice",
-    "question": "Qual a saída deste código?\\n\`\`\`c\\nint x = 5;\\nprintf(\\"%d\\", x++);\\n\`\`\`",
-    "options": ["5", "6", "4", "Erro"],
-    "correct": 0,
-    "explanation": "x++ é pós-incremento: imprime 5 primeiro, depois incrementa."
-  },
-  {
-    "type": "complete",
-    "question": "Complete o código para alocar memória para 10 inteiros:\\n\`\`\`c\\nint *p = ______(10 * sizeof(int));\\n\`\`\`",
-    "answer": "malloc",
-    "acceptAlso": ["(int*)malloc", "(int *)malloc"],
-    "explanation": "malloc() aloca memória dinamicamente no heap."
-  },
-  {
-    "type": "concept",
-    "question": "Em POO, qual pilar permite que uma classe filha redefina um método da classe pai?",
-    "options": ["Polimorfismo", "Encapsulamento", "Abstração", "Herança"],
-    "correct": 0,
-    "explanation": "Polimorfismo de sobrescrita (override) permite redefinir métodos herdados."
-  }
-]
+FORMATO JSON ESTRITO (sem markdown, sem comentarios, sem texto extra):
+[{"type":"choice","question":"pergunta aqui","options":["A","B","C","D"],"correct":0,"explanation":"explicacao"},{"type":"complete","question":"complete: int *p = ____(sizeof(int));","answer":"malloc","acceptAlso":[],"explanation":"explicacao"},{"type":"concept","question":"pergunta","options":["A","B","C","D"],"correct":0,"explanation":"explicacao"}]
 
-REGRAS:
-- Misture os 3 tipos (pelo menos 3 de cada tipo "choice" e "complete", e 2+ "concept")
-- Para "complete": resposta CURTA (1-5 palavras max)
-- Perguntas práticas no estilo que cai na prova
-- Inclua código C quando possível
-- APENAS JSON, sem texto antes ou depois`;
+REGRAS CRITICAS:
+- NAO use crases triplas dentro do JSON. Para codigo, escreva direto no texto.
+- NAO use caracteres especiais ou quebras de linha dentro das strings.
+- Use \\n para quebra de linha dentro de strings JSON.
+- Retorne SOMENTE o array JSON, nada antes nem depois.
+- Minimo 3 choice, 2 complete, 2 concept.`;
 
         const r = await callGemini(prompt, SYSTEM_INSTRUCTION);
-        state.currentFlashcards = JSON.parse(r.replace(/```json?\n?/g,'').replace(/```/g,'').trim());
+        state.currentFlashcards = fixJSON(r);
         state.currentFlashIndex = 0;
         flashScore = { correct: 0, wrong: 0 };
         document.getElementById('flashcard-area').classList.remove('hidden');
