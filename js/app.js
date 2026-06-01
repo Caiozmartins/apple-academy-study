@@ -49,7 +49,7 @@ const ACHIEVEMENTS = [
 ];
 
 // --- Model Fallback ---
-const MODEL_FALLBACK = ['gemini-2.5-flash','gemma-4-28b-it','gemma-4-31b-it','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
+const MODEL_FALLBACK = ['gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash-lite','gemini-2.0-flash','gemini-1.5-flash'];
 
 // --- State ---
 const defaultStats = { streak:0, quizzes:0, challenges:0, correct:0, total:0, lastDate:'', totalXp:0, level:1, lessonsCompleted:0, perfectQuiz:false, examPassed:false, examAced:false, modulesStudied:0, pomodorosCompleted:0, reviewsCompleted:0, pomoCyclesToday:0, pomoTotalMin:0, unlockedAch:[] };
