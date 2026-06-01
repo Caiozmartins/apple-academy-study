@@ -36,6 +36,20 @@
         </div>
     </div>
 
+    <!-- Pomodoro Floating Widget -->
+    <div id="pomo-widget" class="pomo-widget hidden">
+        <div class="pomo-widget-header" id="pomo-widget-toggle">
+            <span>🍅</span>
+            <span id="pomo-widget-time">25:00</span>
+            <span id="pomo-widget-label" class="pomo-widget-tag">FOCO</span>
+        </div>
+        <div class="pomo-widget-controls" id="pomo-widget-controls">
+            <button id="pomo-widget-start" class="btn-primary" style="padding:6px 14px;font-size:0.8rem;width:auto">Iniciar</button>
+            <button id="pomo-widget-reset" class="btn-secondary" style="padding:6px 10px;font-size:0.8rem">↺</button>
+            <button id="pomo-widget-close" class="btn-secondary" style="padding:6px 10px;font-size:0.8rem">✕</button>
+        </div>
+    </div>
+
     <!-- API Key Modal -->
     <div id="api-modal" class="modal">
         <div class="modal-content">
@@ -117,7 +131,7 @@
                 <span class="nav-icon">💬</span>
                 <span class="nav-label">Tutor IA</span>
             </li>
-            <li class="nav-item" data-page="pomodoro">
+            <li class="nav-item" id="nav-pomo-toggle">
                 <span class="nav-icon">🍅</span>
                 <span class="nav-label">Pomodoro</span>
             </li>

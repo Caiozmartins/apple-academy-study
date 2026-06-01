@@ -818,50 +818,131 @@ async function sendChat() {
     msgs.scrollTop=msgs.scrollHeight;
 }
 
-// ===== POMODORO =====
+// ===== POMODORO (floating widget) =====
 function setupPomodoroPage() {
     let focusMin=25, breakMin=5, running=false, onBreak=false, remaining=25*60, interval=null;
+    const widget = document.getElementById('pomo-widget');
+    const wTime = document.getElementById('pomo-widget-time');
+    const wLabel = document.getElementById('pomo-widget-label');
+    const wStart = document.getElementById('pomo-widget-start');
+    const wControls = document.getElementById('pomo-widget-controls');
+
+    // Also keep the full page working
     const timeEl=document.getElementById('pomo-time'), labelEl=document.getElementById('pomo-label');
     const circle=document.getElementById('pomo-circle'), startBtn=document.getElementById('pomo-start');
     const circumference = 2*Math.PI*90;
-    circle.style.strokeDasharray=circumference;
+    if (circle) circle.style.strokeDasharray=circumference;
+
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    function formatTime(sec) {
+        const m=Math.floor(sec/60), s=sec%60;
+        return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
 
     function updateDisplay() {
-        const m=Math.floor(remaining/60),s=remaining%60;
-        timeEl.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-        const total=onBreak?breakMin*60:focusMin*60;
-        const progress=((total-remaining)/total)*circumference;
-        circle.style.strokeDashoffset=circumference-progress;
-        if(onBreak) circle.classList.add('break-mode'); else circle.classList.remove('break-mode');
+        const timeStr = formatTime(remaining);
+        // Widget
+        if (wTime) wTime.textContent = timeStr;
+        if (wLabel) {
+            wLabel.textContent = onBreak ? 'PAUSA' : 'FOCO';
+            wLabel.classList.toggle('break', onBreak);
+        }
+        // Full page
+        if (timeEl) timeEl.textContent = timeStr;
+        if (labelEl) labelEl.textContent = onBreak ? 'DESCANSO' : 'FOCO';
+        if (circle) {
+            const total = onBreak ? breakMin*60 : focusMin*60;
+            const progress = ((total-remaining)/total)*circumference;
+            circle.style.strokeDashoffset = circumference - progress;
+            if(onBreak) circle.classList.add('break-mode'); else circle.classList.remove('break-mode');
+        }
+        // Tab title
+        if (running) document.title = `${timeStr} ${onBreak?'☕':'🍅'} Academy Study Hub`;
+        else document.title = 'Apple Academy Study Hub';
+    }
+
+    function notifyEnd(isBreak) {
+        // Sound beep
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator(); const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = isBreak ? 523 : 440;
+            gain.gain.value = 0.3;
+            osc.start(); setTimeout(()=>{osc.stop();ctx.close();}, 600);
+        } catch(e) {}
+        // Browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(isBreak ? '☕ Pausa acabou!' : '🍅 Foco concluído!', {
+                body: isBreak ? 'Hora de voltar a estudar!' : 'Boa! Hora de descansar.',
+                icon: '🍅'
+            });
+        }
+        // Widget alarm animation
+        widget.classList.add('alarm');
+        setTimeout(() => widget.classList.remove('alarm'), 3000);
     }
 
     function start() {
-        if(running){clearInterval(interval);running=false;startBtn.textContent='Continuar';return;}
-        running=true; startBtn.textContent='Pausar';
-        interval=setInterval(()=>{
+        if (running) { clearInterval(interval); running=false; wStart.textContent='Continuar'; if(startBtn) startBtn.textContent='Continuar'; return; }
+        running=true; wStart.textContent='Pausar'; if(startBtn) startBtn.textContent='Pausar';
+        interval = setInterval(()=>{
             remaining--;
-            if(remaining<=0){
+            if (remaining <= 0) {
                 clearInterval(interval); running=false;
-                if(!onBreak){
+                if (!onBreak) {
                     state.stats.pomodorosCompleted=(state.stats.pomodorosCompleted||0)+1;
                     state.stats.pomoCyclesToday=(state.stats.pomoCyclesToday||0)+1;
                     state.stats.pomoTotalMin=(state.stats.pomoTotalMin||0)+focusMin;
                     saveStats(); addXp(10,'Pomodoro completo'); updateMission('pomodoro'); checkAchievements();
-                    document.getElementById('pomo-cycles').textContent=state.stats.pomoCyclesToday;
-                    document.getElementById('pomo-total').textContent=`${Math.floor(state.stats.pomoTotalMin/60)}h ${state.stats.pomoTotalMin%60}min`;
-                    onBreak=true; remaining=breakMin*60; labelEl.textContent='DESCANSO';
-                    startBtn.textContent='Iniciar Descanso'; fireConfetti();
+                    const pc=document.getElementById('pomo-cycles'); if(pc) pc.textContent=state.stats.pomoCyclesToday;
+                    const pt=document.getElementById('pomo-total'); if(pt) pt.textContent=`${Math.floor(state.stats.pomoTotalMin/60)}h ${state.stats.pomoTotalMin%60}min`;
+                    notifyEnd(false);
+                    onBreak=true; remaining=breakMin*60;
+                    wStart.textContent='Iniciar Pausa'; if(startBtn) startBtn.textContent='Iniciar Descanso';
+                    fireConfetti();
                 } else {
-                    onBreak=false; remaining=focusMin*60; labelEl.textContent='FOCO';
-                    startBtn.textContent='Iniciar';
+                    notifyEnd(true);
+                    onBreak=false; remaining=focusMin*60;
+                    wStart.textContent='Iniciar'; if(startBtn) startBtn.textContent='Iniciar';
                 }
             }
             updateDisplay();
-        },1000);
+        }, 1000);
     }
 
-    startBtn.addEventListener('click', start);
-    document.getElementById('pomo-reset').addEventListener('click',()=>{clearInterval(interval);running=false;onBreak=false;remaining=focusMin*60;labelEl.textContent='FOCO';startBtn.textContent='Iniciar';updateDisplay();});
+    function reset() {
+        clearInterval(interval); running=false; onBreak=false; remaining=focusMin*60;
+        wStart.textContent='Iniciar'; if(startBtn) startBtn.textContent='Iniciar';
+        updateDisplay();
+    }
+
+    // Widget controls
+    wStart.addEventListener('click', start);
+    document.getElementById('pomo-widget-reset').addEventListener('click', reset);
+    document.getElementById('pomo-widget-close').addEventListener('click', () => {
+        if (running && !confirm('Timer rodando. Fechar mesmo?')) return;
+        reset(); widget.classList.add('hidden');
+    });
+    document.getElementById('pomo-widget-toggle').addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        wControls.style.display = wControls.style.display === 'none' ? 'flex' : 'none';
+    });
+
+    // Sidebar toggle opens widget
+    document.getElementById('nav-pomo-toggle').addEventListener('click', () => {
+        widget.classList.remove('hidden');
+        document.getElementById('sidebar').classList.remove('open');
+    });
+
+    // Full page controls (if they navigate to pomodoro page)
+    if (startBtn) startBtn.addEventListener('click', () => { widget.classList.remove('hidden'); start(); });
+    const resetBtn = document.getElementById('pomo-reset');
+    if (resetBtn) resetBtn.addEventListener('click', reset);
 
     document.querySelectorAll('.pomo-adj-btn').forEach(btn=>{
         btn.addEventListener('click',()=>{
@@ -872,8 +953,8 @@ function setupPomodoroPage() {
     });
 
     updateDisplay();
-    document.getElementById('pomo-cycles').textContent=state.stats.pomoCyclesToday||0;
-    document.getElementById('pomo-total').textContent=`${Math.floor((state.stats.pomoTotalMin||0)/60)}h ${(state.stats.pomoTotalMin||0)%60}min`;
+    const pc=document.getElementById('pomo-cycles'); if(pc) pc.textContent=state.stats.pomoCyclesToday||0;
+    const pt=document.getElementById('pomo-total'); if(pt) pt.textContent=`${Math.floor((state.stats.pomoTotalMin||0)/60)}h ${(state.stats.pomoTotalMin||0)%60}min`;
 }
 
 // ===== VIDEO AULAS =====
