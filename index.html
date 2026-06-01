@@ -109,6 +109,10 @@
                 <span class="nav-icon">🏆</span>
                 <span class="nav-label">Conquistas</span>
             </li>
+            <li class="nav-item" data-page="videos">
+                <span class="nav-icon">🎬</span>
+                <span class="nav-label">Vídeo Aulas</span>
+            </li>
             <li class="nav-item" data-page="chat">
                 <span class="nav-icon">💬</span>
                 <span class="nav-label">Tutor IA</span>
@@ -538,6 +542,48 @@ int main() {
                 <p class="subtitle">Desbloqueie todas!</p>
             </div>
             <div id="achievements-grid" class="achievements-grid"></div>
+        </section>
+
+        <!-- VIDEO AULAS PAGE -->
+        <section id="page-videos" class="page">
+            <div class="page-header">
+                <h1>🎬 Vídeo Aulas</h1>
+                <p class="subtitle">Aulas recomendadas por ex-alunos da Academy <span class="xp-hint">+5 XP por vídeo assistido</span></p>
+            </div>
+
+            <div class="video-filter">
+                <select id="video-module-filter">
+                    <option value="all">Todos os módulos</option>
+                    <option value="c-basics">Fase 1 — Base em C</option>
+                    <option value="pointers">Fase 2 — Ponteiros</option>
+                    <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                    <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                    <option value="oop">Fase 5 — POO</option>
+                    <option value="logic">Fase 6 — Lógica Matemática</option>
+                    <option value="custom">Meus vídeos</option>
+                </select>
+            </div>
+
+            <!-- Add custom video -->
+            <div class="add-video-section">
+                <button id="toggle-add-video" class="btn-secondary">+ Adicionar vídeo do YouTube</button>
+                <div id="add-video-form" class="add-video-form hidden">
+                    <input type="text" id="custom-video-url" placeholder="Cole o link do YouTube aqui...">
+                    <input type="text" id="custom-video-title" placeholder="Título do vídeo">
+                    <select id="custom-video-module">
+                        <option value="custom">Geral / Meus vídeos</option>
+                        <option value="c-basics">Fase 1 — Base em C</option>
+                        <option value="pointers">Fase 2 — Ponteiros</option>
+                        <option value="sorting">Fase 3 — Ordenação e Busca</option>
+                        <option value="data-structures">Fase 4 — Estrutura de Dados</option>
+                        <option value="oop">Fase 5 — POO</option>
+                        <option value="logic">Fase 6 — Lógica Matemática</option>
+                    </select>
+                    <button id="save-custom-video" class="btn-primary">Salvar</button>
+                </div>
+            </div>
+
+            <div id="videos-grid" class="videos-grid"></div>
         </section>
 
         <!-- CHAT / TUTOR PAGE -->

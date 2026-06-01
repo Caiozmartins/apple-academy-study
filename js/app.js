@@ -72,8 +72,32 @@ document.addEventListener('DOMContentLoaded', () => {
     updateStreak(); generateDailyMissions(); renderAll();
     setupNavigation(); setupApiModal(); setupSettings(); setupLearnPage();
     setupQuizPage(); setupCodePage(); setupFlashcardsPage(); setupChatPage();
-    setupMobile(); setupExamPage(); setupPomodoroPage();
+    setupMobile(); setupExamPage(); setupPomodoroPage(); setupVideosPage();
 });
+
+// ===== CURATED VIDEOS (from Apple Academy repo + ex-students) =====
+const CURATED_VIDEOS = [
+    // Fase 1 — Base em C
+    { id: 'PLOXIs3c4k2TeQOyb-uQwHkKkpT1zPTWm6', title: 'Playlist Completa de C — Eduardo Casavella', module: 'c-basics', type: 'playlist' },
+    { id: 'PLa75BYTPDNKZWYypgOFEsX3H2Mg-SzuLW', title: 'C de Aluno para Aluno', module: 'c-basics', type: 'playlist' },
+    { id: 'yrWIlIVZHB0', title: 'Linguagem C do Zero — Programe Seu Futuro', module: 'c-basics', type: 'video' },
+    { id: 'niTmi2OiCto', title: 'Funções em C (parte 1)', module: 'c-basics', type: 'video' },
+    { id: 'jd9PABbIvbA', title: 'Funções em C (parte 2)', module: 'c-basics', type: 'video' },
+    // Fase 2 — Ponteiros
+    { id: '2ybLD6_2gKM', title: 'Ponteiros em C — Explicação Completa', module: 'pointers', type: 'video' },
+    { id: 'w276EE-i8vI', title: 'Ponteiros em C — Detalhado', module: 'pointers', type: 'video' },
+    { id: 'D5QvQmes198', title: 'Ponteiros — Prática', module: 'pointers', type: 'video' },
+    { id: '4yVCGgEE9bc', title: 'Vetores em C — Explicação', module: 'pointers', type: 'video' },
+    { id: '5fSf9xSJK7c', title: 'Vetores em C — Prática', module: 'pointers', type: 'video' },
+    { id: 'YyWMN_0g3BQ', title: 'Memory Management e C — Fabio Akita (GOAT)', module: 'pointers', type: 'video' },
+    // Fase 4 — Estrutura de Dados
+    { id: 'PLqJK4Oyr5WSjQ584hwqaHJYDpDcYqS-HK', title: 'Estrutura de Dados — Playlist Completa', module: 'data-structures', type: 'playlist' },
+    { id: 'Czcc5EUR_yQ', title: 'Estrutura de Dados em C — Série', module: 'data-structures', type: 'video' },
+    { id: '7fwPj13AJOg', title: 'Árvore Binária em C — Kauã Miguel (ex-Academy)', module: 'data-structures', type: 'video' },
+    // Fase 6 — Lógica
+    { id: 'PltqUuwR9ec', title: 'Lógica Matemática — Playlist Completa', module: 'logic', type: 'video' },
+    { id: 'tiARjzPh2pI', title: 'Lógica para Concursos — Macetes', module: 'logic', type: 'video' },
+];
 
 // ===== GEMINI API =====
 const SYSTEM_INSTRUCTION = `Você é um tutor especializado em preparação para a prova da Apple Developer Academy (IFCE/UCB).
@@ -850,4 +874,108 @@ function setupPomodoroPage() {
     updateDisplay();
     document.getElementById('pomo-cycles').textContent=state.stats.pomoCyclesToday||0;
     document.getElementById('pomo-total').textContent=`${Math.floor((state.stats.pomoTotalMin||0)/60)}h ${(state.stats.pomoTotalMin||0)%60}min`;
+}
+
+// ===== VIDEO AULAS =====
+function setupVideosPage() {
+    const customVideos = JSON.parse(localStorage.getItem('academy_custom_videos') || '[]');
+    const watchedVideos = JSON.parse(localStorage.getItem('academy_watched_videos') || '[]');
+
+    const filter = document.getElementById('video-module-filter');
+    filter.addEventListener('change', () => renderVideos());
+
+    document.getElementById('toggle-add-video').addEventListener('click', () => {
+        document.getElementById('add-video-form').classList.toggle('hidden');
+    });
+
+    document.getElementById('save-custom-video').addEventListener('click', () => {
+        const url = document.getElementById('custom-video-url').value.trim();
+        const title = document.getElementById('custom-video-title').value.trim();
+        const module = document.getElementById('custom-video-module').value;
+        if (!url || !title) { alert('Preencha o link e o título.'); return; }
+        const videoId = extractYouTubeId(url);
+        if (!videoId) { alert('Link inválido. Cole um link do YouTube.'); return; }
+        customVideos.push({ id: videoId, title, module, type: 'video', custom: true });
+        localStorage.setItem('academy_custom_videos', JSON.stringify(customVideos));
+        document.getElementById('custom-video-url').value = '';
+        document.getElementById('custom-video-title').value = '';
+        document.getElementById('add-video-form').classList.add('hidden');
+        renderVideos();
+    });
+
+    function extractYouTubeId(url) {
+        const patterns = [
+            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+            /youtube\.com\/playlist\?list=([a-zA-Z0-9_-]+)/
+        ];
+        for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
+        return null;
+    }
+
+    function isPlaylist(id) { return id.length > 11; }
+
+    function getEmbedUrl(video) {
+        if (video.type === 'playlist' || isPlaylist(video.id)) {
+            return `https://www.youtube.com/embed/videoseries?list=${video.id}`;
+        }
+        return `https://www.youtube.com/embed/${video.id}`;
+    }
+
+    function renderVideos() {
+        const mod = filter.value;
+        const allVideos = [...CURATED_VIDEOS, ...customVideos];
+        const filtered = mod === 'all' ? allVideos : allVideos.filter(v => v.module === mod);
+        const grid = document.getElementById('videos-grid');
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div class="lesson-placeholder"><span class="placeholder-icon">🎬</span><p>Nenhum vídeo nesse módulo ainda.</p></div>';
+            return;
+        }
+
+        grid.innerHTML = filtered.map((v, i) => {
+            const watched = watchedVideos.includes(v.id);
+            const modName = TOPICS[v.module]?.name || 'Geral';
+            const deleteBtn = v.custom ? `<span class="video-delete" data-vid="${v.id}" title="Remover">✕</span>` : '';
+            return `<div class="video-card">
+                <iframe src="${getEmbedUrl(v)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+                <div class="video-card-info">
+                    <h4>${v.title}</h4>
+                    <div class="video-meta">
+                        <span class="video-module-tag">${modName}</span>
+                        <span>
+                            <span class="video-watched" data-vid="${v.id}">${watched ? '✅ Assistido' : '👁 Marcar assistido'}</span>
+                            ${deleteBtn}
+                        </span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+
+        // Watch toggle
+        grid.querySelectorAll('.video-watched').forEach(el => {
+            el.addEventListener('click', () => {
+                const vid = el.dataset.vid;
+                const idx = watchedVideos.indexOf(vid);
+                if (idx >= 0) { watchedVideos.splice(idx, 1); }
+                else { watchedVideos.push(vid); addXp(5, 'Vídeo assistido'); recordActivity(); }
+                localStorage.setItem('academy_watched_videos', JSON.stringify(watchedVideos));
+                renderVideos();
+            });
+        });
+
+        // Delete custom
+        grid.querySelectorAll('.video-delete').forEach(el => {
+            el.addEventListener('click', () => {
+                const vid = el.dataset.vid;
+                const idx = customVideos.findIndex(v => v.id === vid);
+                if (idx >= 0 && confirm('Remover esse vídeo?')) {
+                    customVideos.splice(idx, 1);
+                    localStorage.setItem('academy_custom_videos', JSON.stringify(customVideos));
+                    renderVideos();
+                }
+            });
+        });
+    }
+
+    renderVideos();
 }
